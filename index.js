@@ -30,6 +30,7 @@ io.on("connection", (socket) => {
 
     app.post("/webhook", (req, res) => {
         console.log(req.body); // Access the request body
+        socket.emit('response');
         res.status(200).end();
     });
 });
