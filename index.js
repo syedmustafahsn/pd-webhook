@@ -27,7 +27,7 @@ io.on("connection", (socket) => {
     });
 
     app.post("/webhook", (req, res) => {
-        console.log(req.body);
+        console.log(req);
         res.status(200).end();
     });
 });
