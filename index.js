@@ -10,7 +10,7 @@ const server = http.createServer(app);
 
 const io = new Server(server, {
     cors: {
-        origin: "https://localhost:3000",
+        origin: "https://podzsurface-test.vercel.app/",
         methods: ["GET", "POST"],
     },
 });
@@ -27,6 +27,6 @@ io.on("connection", (socket) => {
     });
 });
 
-server.listen(3002, () => {
+server.listen(process.env.PORT || 3001, () => {
     console.log("SERVER IS RUNNING");
 });
