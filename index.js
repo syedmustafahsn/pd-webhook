@@ -32,7 +32,7 @@ io.on("connection", (socket) => {
         console.log('send')
     });
 
-    app.post("/webhook", (req, res) => {
+    app.post("https://pd-webhook.herokuapp.com/webhook", (req, res) => {
         console.log(req.body)
 
         socket.emit('response', req.body)
