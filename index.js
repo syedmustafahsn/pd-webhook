@@ -3,8 +3,10 @@ const app = express();
 const http = require("http");
 const { Server } = require("socket.io");
 const cors = require("cors");
+const bodyParser = require("body-parser"); // Require body-parser
 
 app.use(cors());
+app.use(bodyParser.json()); // Use body-parser middleware
 
 const server = http.createServer(app);
 
@@ -27,7 +29,7 @@ io.on("connection", (socket) => {
     });
 
     app.post("/webhook", (req, res) => {
-        console.log(req);
+        console.log(req.body); // Access the request body
         res.status(200).end();
     });
 });
