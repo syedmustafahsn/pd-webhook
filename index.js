@@ -4,7 +4,10 @@ const cors = require('cors');
 const bodyParser = require('body-parser');
 const dotenv = require('dotenv');
 const nodemailer = require('nodemailer');
+const path = require('path');
+const fs = require('fs')
 const Mux = require('@mux/mux-node');
+
 
 dotenv.config();
 
@@ -12,8 +15,8 @@ app.use(cors());
 app.use(bodyParser.json());
 
 const { Video } = new Mux(
-    '597f62db-fd53-4eda-8a78-76a50172f379',
-    'UanvuFMUMWTR5KSm2FaR3lQxsJaIzI9FPfYk8eBfLOHtIoAsNAF0L1v6CXzdKAi8MkFzgBMNibP'
+    process.env.MUX_TOKEN_SECRET,
+    process.env.MUX_TOKEN_ID
 );
 
 const transporter = nodemailer.createTransport({
@@ -22,61 +25,76 @@ const transporter = nodemailer.createTransport({
     auth: {
         user: process.env.EMAIL_SMTP_USER,
         pass: process.env.EMAIL_SMTP_PASS
-    },
+    }
 });
 
 app.post('/create-event', (req, res) => {
+    const { attendees, eventName, user, slug } = req.body;
 
-    transporter.sendMail({
-        from: process.env.EMAIL_ADDRESS_FROM,
-        to: req.body.email,
-        subject: 'Test Email',
-        text: 'This is a test email sent using Nodemailer.',
-    }, (error, info) => {
-        if (error) {
-            console.error('Error sending email:', error);
-        } else {
-            console.log('Email sent:', info.response);
-        }
-    })
+    const emailTemplatePath = path.join(__dirname, 'email-template.html');
+    const emailTemplate = fs.readFileSync(emailTemplatePath, 'utf-8');
 
-    // Video.Spaces.create()
-    //     .then((spaceResponse) => {
-    //         const spaceID = spaceResponse.id;
+    Video.Spaces.create()
+        .then((spaceResponse) => {
+            const spaceID = spaceResponse.id;
 
-    //         Video.LiveStreams.create({
-    //             playback_policy: 'public',
-    //             new_asset_settings: { playback_policy: 'public' },
-    //         })
-    //             .then((streamResponse) => {
-    //                 const streamID = streamResponse.id;
+            Video.LiveStreams.create({
+                playback_policy: 'public',
+                new_asset_settings: { playback_policy: 'public' },
+            })
+                .then((streamResponse) => {
+                    const streamID = streamResponse.id;
 
-    //                 Video.Spaces.Broadcasts.create(spaceID, {
-    //                     live_stream_id: streamID,
-    //                 })
-    //                     .then((broadcastResponse) => {
-    //                         const spaceToken = Mux.JWT.signSpaceId(spaceID);
-    //                         console.log(spaceToken);
+                    Video.Spaces.Broadcasts.create(spaceID, {
+                        live_stream_id: streamID,
+                    })
+                        .then((broadcastResponse) => {
+                            const spaceToken = Mux.JWT.signSpaceId(spaceID);
+                            console.log(spaceToken);
 
-    //                         res.status(200).json({ spaceToken });
-    //                     })
-    //                     .catch((error) => {
-    //                         console.error('Failed to create broadcast:', error);
-    //                         res.status(500).json({ error: 'Failed to create broadcast' });
-    //                     });
-    //             })
-    //             .catch((error) => {
-    //                 console.error('Failed to create livestream:', error);
-    //                 res.status(500).json({ error: 'Failed to create livestream' });
-    //             });
-    //     })
-    //     .catch((error) => {
-    //         console.error('Failed to create space:', error);
-    //         res.status(500).json({ error: 'Failed to create space' });
-    //     });
+                            attendees.forEach(function (to) {
+                                const customizedEmailTemplate = emailTemplate
+                                    .replace('{user}', user)
+                                    .replace('{eventName}', eventName)
+                                    .replace('{host}', to.name)
+                                    .replace('{token}', process.env.HOME_URL + '/events/' + slug + '/' + to.token)
+
+                                const mailOptions = {
+                                    from: process.env.EMAIL_ADDRESS_FROM,
+                                    to: to.email,
+                                    subject: 'Email Invitation',
+                                    html: customizedEmailTemplate
+                                };
+
+                                transporter.sendMail(mailOptions, (error, info) => {
+                                    if (error) {
+                                        console.error('Error sending email:', error);
+                                    } else {
+                                        console.log('Email sent:', info.response);
+                                        res.status(200).json({ success: true });
+                                    }
+                                });
+                            })
+
+
+                            res.status(200).json({ token: spaceToken });
+                        })
+                        .catch((error) => {
+                            console.error('Failed to create broadcast:', error);
+                            res.status(500).json({ error: 'Failed to create broadcast' });
+                        });
+                })
+                .catch((error) => {
+                    console.error('Failed to create livestream:', error);
+                    res.status(500).json({ error: 'Failed to create livestream' });
+                });
+        })
+        .catch((error) => {
+            console.error('Failed to create space:', error);
+            res.status(500).json({ error: 'Failed to create space' });
+        });
 });
 
-
 app.listen(3001, () => {
-    console.log('SERVER IS RUNNING');
+    console.log('Server is running');
 });

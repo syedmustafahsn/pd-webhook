@@ -1,0 +1,65 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Email Invitation</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            line-height: 1.5;
+        }
+
+        table {
+            width: 100%;
+            max-width: 600px;
+            margin: 0 auto;
+            padding: 20px;
+            border-collapse: collapse;
+        }
+
+        table td {
+            padding: 10px;
+            text-align: center;
+            vertical-align: top;
+        }
+
+        h2 {
+            color: #333;
+            font-size: 24px;
+            margin: 0;
+        }
+
+        p {
+            color: #555;
+            font-size: 16px;
+            margin: 0;
+        }
+
+        .cta-button {
+            display: inline-block;
+            margin-top: 20px;
+            padding: 10px 20px;
+            background-color: #007bff;
+            color: #fff;
+            text-decoration: none;
+            border-radius: 4px;
+        }
+    </style>
+</head>
+
+<body>
+    <table>
+        <tr>
+            <td>
+                <h2>Email Invitation For {host}</h2>
+                <p><strong>{user}</strong> has invited you to host their event <strong>{eventName}</strong>.</p>
+                <p>Click the link below to accept the invitation:</p>
+                <a class="cta-button" href="{token}">Accept Invitation</a>
+            </td>
+        </tr>
+    </table>
+</body>
+
+</html>
