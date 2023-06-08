@@ -1,42 +1,5 @@
-// Import required modules
-const express = require("express");
-const app = express();
-const http = require("http");
-const { Server } = require("socket.io");
-const cors = require("cors");
-const nodemailer = require('nodemailer');
-const path = require('path');
-const Mux = require('@mux/mux-node');
 
-// Enable Cross-Origin Resource Sharing (CORS)
-app.use(cors());
 
-// Create HTTP server
-const server = http.createServer(app);
-
-// Initialize Socket.IO server
-const socketIO = new Server(server, {
-    cors: {
-        origin: "https://localhost:3000",
-        methods: ["GET", "POST"],
-    },
-});
-
-// Socket.IO connection handling
-socketIO.on('connection', (socket) => {
-    console.log(`⚡: ${socket.id} user just connected!`);
-
-    // Sends the message to all the users on the server
-    socket.on('message', (data) => {
-        socketIO.emit('messageResponse', data);
-    });
-
-    socket.on('disconnect', () => {
-        console.log('🔥: A user disconnected');
-    });
-});
-
-// Initialize Mux and Nodemailer
 const { Video } = new Mux(
     process.env.MUX_TOKEN_SECRET,
     process.env.MUX_TOKEN_ID
@@ -51,20 +14,16 @@ const transporter = nodemailer.createTransport({
     }
 });
 
-// Endpoint to create an event
 app.post('/create-event', (req, res) => {
     const { attendees, eventName, user, slug } = req.body;
 
-    // Read email template file
     const emailTemplatePath = path.join(__dirname, 'email-template.html');
     const emailTemplate = fs.readFileSync(emailTemplatePath, 'utf-8');
 
-    // Create a new space
     Video.Spaces.create()
         .then((spaceResponse) => {
             const spaceID = spaceResponse.id;
 
-            // Create a new live stream
             Video.LiveStreams.create({
                 playback_policy: 'public',
                 new_asset_settings: { playback_policy: 'public' },
@@ -72,7 +31,6 @@ app.post('/create-event', (req, res) => {
                 .then((streamResponse) => {
                     const streamID = streamResponse.id;
 
-                    // Create a new broadcast
                     Video.Spaces.Broadcasts.create(spaceID, {
                         live_stream_id: streamID,
                     })
@@ -80,7 +38,6 @@ app.post('/create-event', (req, res) => {
                             const spaceToken = Mux.JWT.signSpaceId(spaceID);
                             console.log(spaceToken);
 
-                            // Send emails to attendees
                             attendees.forEach(function (to) {
                                 const customizedEmailTemplate = emailTemplate
                                     .replace('{user}', user)
@@ -105,7 +62,7 @@ app.post('/create-event', (req, res) => {
                                 });
                             })
 
-                            // Return the space token
+
                             res.status(200).json({ token: spaceToken });
                         })
                         .catch((error) => {
@@ -122,9 +79,4 @@ app.post('/create-event', (req, res) => {
             console.error('Failed to create space:', error);
             res.status(500).json({ error: 'Failed to create space' });
         });
-});
-
-// Start the server
-server.listen(process.env.PORT || 3001, () => {
-    console.log("SERVER IS RUNNING");
 });
