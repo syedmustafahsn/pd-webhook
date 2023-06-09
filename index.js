@@ -1,3 +1,4 @@
+
 // Import required modules
 const express = require("express");
 const app = express();
@@ -7,6 +8,7 @@ const cors = require("cors");
 const nodemailer = require('nodemailer');
 const path = require('path');
 const Mux = require('@mux/mux-node');
+const { default: axios } = require("axios");
 
 // Enable Cross-Origin Resource Sharing (CORS)
 app.use(cors());
@@ -17,23 +19,39 @@ const server = http.createServer(app);
 // Initialize Socket.IO server
 const socketIO = new Server(server, {
     cors: {
-        origin: "https://podzsurface-test.vercel.app/",
+        origin: "https://localhost:3000",
         methods: ["GET", "POST"],
     },
 });
 
+let onlineUsers = [];
+
+
 // Socket.IO connection handling
 socketIO.on('connection', (socket) => {
-    console.log(`⚡: ${socket.id} user just connected!`);
 
-    // Sends the message to all the users on the server
-    socket.on('message', (data) => {
-        socketIO.emit('messageResponse', data);
-    });
-
+    socket.on('userJoined', (data) => {
+        // socket.join(data.userId);
+        console.log(data.roomName + ' has joined his room');
+    })
+    
     socket.on('disconnect', () => {
         console.log('🔥: A user disconnected');
     });
+    
+    socket.on('chatChanged', (data) => {
+        socket.join(data.roomName)
+        
+        console.log(' has joined the chat with ' + data.roomName);
+    })
+    
+    // Sends the message to all the users on the server
+    socket.on('message', (data) => {
+        socketIO.to(data.roomName).emit('messageResponse', data);
+        console.log(data);
+        socketIO.emit('messageResponse', data)
+    });
+
 });
 
 // Initialize Mux and Nodemailer
