@@ -33,7 +33,7 @@ app.post('/webhook', (req, res) => {
 })
 // Socket.IO connection handling
 socketIO.on('connection', (socket) => {
-
+    console.log('user has joined')
    
 
     // socket.on('userJoined', (data) => {
