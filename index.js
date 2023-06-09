@@ -38,8 +38,8 @@ socketIO.on('connection', (socket) => {
 
 // Initialize Mux and Nodemailer
 const { Video } = new Mux(
-    process.env.MUX_TOKEN_SECRET,
-    process.env.MUX_TOKEN_ID
+    '597f62db-fd53-4eda-8a78-76a50172f379',
+    'UanvuFMUMWTR5KSm2FaR3lQxsJaIzI9FPfYk8eBfLOHtIoAsNAF0L1v6CXzdKAi8MkFzgBMNibP'
 );
 
 const transporter = nodemailer.createTransport({
