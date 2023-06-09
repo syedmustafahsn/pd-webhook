@@ -9,9 +9,11 @@ const nodemailer = require('nodemailer');
 const path = require('path');
 const Mux = require('@mux/mux-node');
 const { default: axios } = require("axios");
+const bodyParser = require('body-parser');
 
 // Enable Cross-Origin Resource Sharing (CORS)
 app.use(cors());
+app.use(bodyParser.json())
 
 // Create HTTP server
 const server = http.createServer(app);
@@ -26,31 +28,35 @@ const socketIO = new Server(server, {
 
 let onlineUsers = [];
 
-
+app.post('/webhook', (req, res) => {
+    console.log(req.body);
+})
 // Socket.IO connection handling
 socketIO.on('connection', (socket) => {
 
-    socket.on('userJoined', (data) => {
-        // socket.join(data.userId);
-        console.log(data.roomName + ' has joined his room');
-    })
+   
+
+    // socket.on('userJoined', (data) => {
+    //     // socket.join(data.userId);
+    //     console.log(data.roomName + ' has joined his room');
+    // })
     
-    socket.on('disconnect', () => {
-        console.log('🔥: A user disconnected');
-    });
+    // socket.on('disconnect', () => {
+    //     console.log('🔥: A user disconnected');
+    // });
     
-    socket.on('chatChanged', (data) => {
-        socket.join(data.roomName)
+    // socket.on('chatChanged', (data) => {
+    //     socket.join(data.roomName)
         
-        console.log(' has joined the chat with ' + data.roomName);
-    })
+    //     console.log(' has joined the chat with ' + data.roomName);
+    // })
     
-    // Sends the message to all the users on the server
-    socket.on('message', (data) => {
-        socketIO.to(data.roomName).emit('messageResponse', data);
-        console.log(data);
-        socketIO.emit('messageResponse', data)
-    });
+    // // Sends the message to all the users on the server
+    // socket.on('message', (data) => {
+    //     socketIO.to(data.roomName).emit('messageResponse', data);
+    //     console.log(data);
+    //     socketIO.emit('messageResponse', data)
+    // });
 
 });
 
