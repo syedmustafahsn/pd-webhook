@@ -10,10 +10,14 @@ const path = require('path');
 const Mux = require('@mux/mux-node');
 const { default: axios } = require("axios");
 const bodyParser = require('body-parser');
+const fs = require('fs');
+const dotenv = require("dotenv");
 
 // Enable Cross-Origin Resource Sharing (CORS)
 app.use(cors());
 app.use(bodyParser.json())
+dotenv.config();
+
 
 // Create HTTP server
 const server = http.createServer(app);
@@ -62,13 +66,13 @@ socketIO.on('connection', (socket) => {
 
 // Initialize Mux and Nodemailer
 const { Video } = new Mux(
-    '597f62db-fd53-4eda-8a78-76a50172f379',
-    'UanvuFMUMWTR5KSm2FaR3lQxsJaIzI9FPfYk8eBfLOHtIoAsNAF0L1v6CXzdKAi8MkFzgBMNibP'
+    process.env.MUX_TOKEN_SECRET,
+    process.env.MUX_TOKEN_ID
 );
 
 const transporter = nodemailer.createTransport({
     host: process.env.EMAIL_SMTP_HOST,
-    port: process.env.EMAIL_SMTP_PORT,
+    port: 465,
     auth: {
         user: process.env.EMAIL_SMTP_USER,
         pass: process.env.EMAIL_SMTP_PASS
@@ -95,10 +99,11 @@ app.post('/create-event', (req, res) => {
             })
                 .then((streamResponse) => {
                     const streamID = streamResponse.id;
+                    console.log(streamID);
 
                     // Create a new broadcast
                     Video.Spaces.Broadcasts.create(spaceID, {
-                        live_stream_id: streamID,
+                        live_stream_id: streamResponse.id,
                     })
                         .then((broadcastResponse) => {
                             const spaceToken = Mux.JWT.signSpaceId(spaceID);
@@ -130,10 +135,11 @@ app.post('/create-event', (req, res) => {
                             })
 
                             // Return the space token
-                            res.status(200).json({ token: spaceToken });
+                            res.status(200).json({ token: spaceToken, spaceID: spaceID, streamID: streamID });
                         })
                         .catch((error) => {
                             console.error('Failed to create broadcast:', error);
+                            console.error(spaceID);
                             res.status(500).json({ error: 'Failed to create broadcast' });
                         });
                 })
@@ -151,4 +157,5 @@ app.post('/create-event', (req, res) => {
 // Start the server
 server.listen(process.env.PORT || 3001, () => {
     console.log("SERVER IS RUNNING");
+    console.log(process.env.EMAIL_SMTP_HOST)
 });
