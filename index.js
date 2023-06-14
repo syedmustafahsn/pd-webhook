@@ -79,6 +79,10 @@ const transporter = nodemailer.createTransport({
     }
 });
 
+app.post('/webhook', (req, res) => {
+    console.log(req.body);
+})
+
 // Endpoint to create an event
 app.post('/create-event', (req, res) => {
     const { attendees, eventName, user, slug } = req.body;
@@ -157,5 +161,4 @@ app.post('/create-event', (req, res) => {
 // Start the server
 server.listen(process.env.PORT || 3001, () => {
     console.log("SERVER IS RUNNING");
-    console.log(process.env.EMAIL_SMTP_HOST)
 });
